@@ -1,0 +1,76 @@
+-- Create tables for SALESMAN, CUSTOMER, and ORDERS
+CREATE TABLE SALESMAN (
+  Salesman_id INT PRIMARY KEY,
+  Name VARCHAR(255),
+  City VARCHAR(255),
+  Commission DECIMAL(10, 2)
+);
+
+CREATE TABLE CUSTOMER (
+  Customer_id INT PRIMARY KEY,
+  Cust_Name VARCHAR(255),
+  City VARCHAR(255),
+  Grade INT,
+  Salesman_id INT,
+  FOREIGN KEY (Salesman_id) REFERENCES SALESMAN(Salesman_id)
+);
+
+CREATE TABLE ORDERS (
+  Ord_No INT PRIMARY KEY,
+  Purchase_Amt DECIMAL(10, 2),
+  Ord_Date DATE,
+  Customer_id INT,
+  Salesman_id INT,
+  FOREIGN KEY (Customer_id) REFERENCES CUSTOMER(Customer_id),
+  FOREIGN KEY (Salesman_id) REFERENCES SALESMAN(Salesman_id)
+);
+
+-- Insert sample data into SALESMAN, CUSTOMER, and ORDERS tables
+INSERT INTO SALESMAN VALUES
+(1001, 'John Doe', 'New York', 0.15),
+(1002, 'Jane Doe', 'Los Angeles', 0.20),
+(1003, 'Jim Beam', 'Bangalore', 0.12);
+
+INSERT INTO CUSTOMER VALUES
+(2001, 'Alpha Corp', 'Bangalore', 2, 1003),
+(2002, 'Beta LLC', 'New York', 3, 1001),
+(2003, 'Gamma Inc', 'Bangalore', 4, 1003);
+
+INSERT INTO ORDERS VALUES
+(3001, 150.00, '2023-04-01', 2001, 1003),
+(3002, 250.00, '2023-04-02', 2002, 1001),
+(3003, 350.00, '2023-04-03', 2003, 1003);
+
+-- Count customers in Bangalore with grade above average
+SELECT COUNT(*) AS Customers_Above_Average
+FROM CUSTOMER
+WHERE City = 'Bangalore' AND Grade > (
+  SELECT AVG(Grade) FROM CUSTOMER WHERE City = 'Bangalore'
+);
+/* This query counts the number of customers in Bangalore who have a grade above the average grade of customers in Bangalore. */
+
+-- Get salesmen with more than one customer
+SELECT S.Name, COUNT(C.Customer_id) AS Num_Customers
+FROM SALESMAN S
+JOIN CUSTOMER C ON S.Salesman_id = C.Salesman_id
+GROUP BY S.Salesman_id
+HAVING COUNT(C.Customer_id) > 1;
+/* This query lists the salesmen who have more than one customer assigned to them. */
+
+-- Check if salesmen have customers in the same city
+SELECT S.Name, 'Has Customers in City' AS Status
+FROM SALESMAN S
+JOIN CUSTOMER C ON S.Salesman_id = C.Salesman_id AND S.City = C.City
+GROUP BY S.Name
+UNION
+SELECT S.Name, 'No Customers in City' AS Status
+FROM SALESMAN S
+WHERE NOT EXISTS (
+  SELECT 1 FROM CUSTOMER C WHERE S.Salesman_id = C.Salesman_id AND S.City = C.City
+);
+/* This query checks if each salesman has customers in the same city as themselves. If they do, it returns "Has Customers in City", otherwise it returns "No Customers in City". */
+
+-- Delete orders and salesmen with Salesman_id = 1000 (non-existent in this case)
+DELETE FROM ORDERS WHERE Salesman_id = 1000;
+DELETE FROM SALESMAN WHERE Salesman_id = 1000;
+/* These queries delete orders and salesmen with Salesman_id = 1000, but since this ID does not exist in the sample data, no rows will be deleted. */

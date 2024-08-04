@@ -1,0 +1,85 @@
+CREATE TABLE ACTOR (
+Act_id INT PRIMARY KEY, -- Create a table to store information about
+actors
+Act_Name VARCHAR(255),
+Act_Gender CHAR(1)
+);
+CREATE TABLE DIRECTOR (
+Dir_id INT PRIMARY KEY, -- Create a table to store information about
+directors
+Dir_Name VARCHAR(255),
+Dir_Phone VARCHAR(15)
+);
+CREATE TABLE MOVIES (
+Mov_id INT PRIMARY KEY, -- Create a table to store information about
+movies
+Mov_Title VARCHAR(255),
+Mov_Year INT,
+Mov_Lang VARCHAR(50),
+Dir_id INT,
+FOREIGN KEY (Dir_id) REFERENCES DIRECTOR(Dir_id) -- Create a foreign
+key relationship with the DIRECTOR table
+);
+CREATE TABLE MOVIE_CAST (
+Act_id INT,
+Mov_id INT,
+Role VARCHAR(255),
+PRIMARY KEY (Act_id, Mov_id),
+FOREIGN KEY (Act_id) REFERENCES ACTOR(Act_id), -- Create a foreign
+key relationship with the ACTOR table
+FOREIGN KEY (Mov_id) REFERENCES MOVIES(Mov_id) -- Create a foreign
+key relationship with the MOVIES table
+);
+CREATE TABLE RATING (
+Mov_id INT,
+Rev_Stars INT,
+PRIMARY KEY (Mov_id),
+FOREIGN KEY (Mov_id) REFERENCES MOVIES(Mov_id) -- Create a foreign
+key relationship with the MOVIES table
+
+);
+-- Get the titles of movies directed by Hitchcock
+SELECT M.Mov_Title
+FROM MOVIES M
+JOIN DIRECTOR D ON M.Dir_id = D.Dir_id
+WHERE D.Dir_Name = 'Hitchcock';
+-- Get the distinct titles of movies in which an actor has played more
+than one role
+SELECT DISTINCT M.Mov_Title
+FROM MOVIE_CAST MC
+JOIN MOVIES M ON MC.Mov_id = M.Mov_id
+WHERE MC.Act_id IN (
+SELECT Act_id
+FROM MOVIE_CAST
+GROUP BY Act_id
+HAVING COUNT(Mov_id) > 1
+);
+-- Get the distinct names of actors who have acted in movies released
+before 2000 and also in movies released after 2015
+SELECT DISTINCT A.Act_Name
+FROM ACTOR A
+JOIN MOVIE_CAST MC ON A.Act_id = MC.Act_id
+JOIN MOVIES M ON MC.Mov_id = M.Mov_id
+WHERE M.Mov_Year < 2000
+AND A.Act_id IN (
+SELECT MC.Act_id
+FROM MOVIE_CAST MC
+JOIN MOVIES M ON MC.Mov_id = M.Mov_id
+WHERE M.Mov_Year > 2015
+);
+-- Get the titles of movies along with the highest rating for each
+movie
+SELECT M.Mov_Title, MAX(R.Rev_Stars) AS Highest_Stars
+FROM MOVIES M
+JOIN RATING R ON M.Mov_id = R.Mov_id
+GROUP BY M.Mov_Title
+ORDER BY M.Mov_Title;
+-- Update the rating of Spielberg movies to 5
+
+UPDATE RATING
+SET Rev_Stars = 5
+WHERE Mov_id IN (
+SELECT M.Mov_id
+FROM MOVIES M
+JOIN DIRECTOR D ON M.Dir_id = D.Dir_id
+WHERE D.Dir_Name = 'Steven Spielberg');

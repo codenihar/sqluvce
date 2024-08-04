@@ -1,0 +1,143 @@
+CREATE TABLE BOOK (
+  Book_id INT PRIMARY KEY,
+  Title VARCHAR(255),
+  Publisher_Name VARCHAR(255),
+  Pub_Year INT
+);
+
+
+CREATE TABLE BOOK_AUTHORS (
+  Book_id INT,
+  Author_Name VARCHAR(255),
+  PRIMARY KEY (Book_id, Author_Name),
+  FOREIGN KEY (Book_id) REFERENCES BOOK(Book_id)
+);
+
+
+CREATE TABLE PUBLISHER (
+  Name VARCHAR(255) PRIMARY KEY,
+  Address VARCHAR(255),
+  Phone VARCHAR(20)
+);
+
+
+CREATE TABLE BOOK_COPIES (
+  Book_id INT,
+  Branch_id INT,
+  No_of_Copies INT,
+  PRIMARY KEY (Book_id, Branch_id),
+  FOREIGN KEY (Book_id) REFERENCES BOOK(Book_id),
+  FOREIGN KEY (Branch_id) REFERENCES LIBRARY_BRANCH(Branch_id)
+);
+
+
+CREATE TABLE BOOK_LENDING (
+  Book_id INT,
+  Branch_id INT,
+  Card_No INT,
+  Date_Out DATE,
+  Due_Date DATE,
+  PRIMARY KEY (Book_id, Branch_id, Card_No),
+  FOREIGN KEY (Book_id) REFERENCES BOOK(Book_id),
+  FOREIGN KEY (Branch_id) REFERENCES LIBRARY_BRANCH(Branch_id)
+);
+
+
+CREATE TABLE LIBRARY_BRANCH (
+  Branch_id INT PRIMARY KEY,
+  Branch_Name VARCHAR(255),
+  Address VARCHAR(255)
+);
+-- Insert values for BOOK table
+INSERT INTO BOOK VALUES
+  (1, 'Book1', 'Publisher1', 2015),
+  (2, 'Book2', 'Publisher2', 2016),
+  (3, 'Book3', 'Publisher3', 2017),
+  (4, 'Book4', 'Publisher4', 2018);
+
+
+-- Insert values for PUBLISHER table
+INSERT INTO PUBLISHER VALUES
+  ('Publisher1', 'Address1', 'Phone1'),
+  ('Publisher2', 'Address2', 'Phone2'),
+  ('Publisher3', 'Address3', 'Phone3'),
+  ('Publisher4', 'Address4', 'Phone4');
+
+
+-- Insert values for BOOK_AUTHORS table
+INSERT INTO BOOK_AUTHORS VALUES
+  (1, 'Author1'),
+  (1, 'Author2'),
+  (2, 'Author3'),
+  (3, 'Author4'),
+  (4, 'Author5');
+
+
+-- Insert values for LIBRARY_BRANCH table
+INSERT INTO LIBRARY_BRANCH VALUES
+  (1, 'Branch1', 'Address1'),
+  (2, 'Branch2', 'Address2'),
+  (3, 'Branch3', 'Address3');
+
+
+-- Insert values for BOOK_COPIES table
+INSERT INTO BOOK_COPIES VALUES
+  (1, 1, 5),
+  (1, 2, 3),
+  (2, 1, 4),
+  (3, 2, 2),
+  (4, 3, 1);
+
+
+-- Insert values for BOOK_LENDING table
+INSERT INTO BOOK_LENDING VALUES
+  (1, 1, 1, '2017-01-01', '2017-01-31'),
+  (1, 1, 2, '2017-02-01', '2017-02-28'),
+  (2, 2, 3, '2017-03-01', '2017-03-31'),
+  (3, 3, 4, '2017-04-01', '2017-04-30');
+  SELECT
+  B.Book_id,
+  B.Title,
+  P.Name AS Publisher_Name,
+  GROUP_CONCAT(BA.Author_Name) AS Authors,
+  BC.Branch_id,
+  BC.No_of_Copies
+FROM
+  BOOK B
+  JOIN PUBLISHER P ON B.Publisher_Name = P.Name
+  JOIN BOOK_AUTHORS BA ON B.Book_id = BA.Book_id
+  JOIN BOOK_COPIES BC ON B.Book_id = BC.Book_id
+GROUP BY
+  B.Book_id,
+  B.Title,
+  P.Name,
+  BC.Branch_id,
+  BC.No_of_Copies;
+  SELECT
+  BL.Card_No,
+  COUNT(*) AS Num_Borrowed
+FROM
+  BOOK_LENDING BL
+WHERE
+  BL.Date_Out BETWEEN '2017-01-01' AND '2017-06-30'
+GROUP BY
+  BL.Card_No
+HAVING
+  COUNT(*) > 0;
+
+
+CREATE TABLE BOOK_PARTITIONED (
+  Book_id INT,
+  Title VARCHAR(255),
+  Publisher_Name VARCHAR(255),
+  Pub_Year INT
+) PARTITION BY RANGE (Pub_Year) (
+  PARTITION p0 VALUES LESS THAN (2000),
+  PARTITION p1 VALUES LESS THAN (2010),
+  PARTITION p2 VALUES LESS THAN (2020),
+  PARTITION p3 VALUES LESS THAN MAXVALUE
+);
+INSERT INTO BOOK_PARTITIONED VALUES
+  (1, 'Book1', 'Publisher1', 2015),
+  (2, 'Book2', 'Publisher2', 2016);
+
